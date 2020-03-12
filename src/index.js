@@ -79,7 +79,8 @@ type Query {
 }
 type Mutation{
   createUser(name:String!, email:String!):User!
- 
+  createPost(title:String!, body:String!,published:Boolean!, author:ID!):Post!
+  createComment(text:String!, author:ID!, post:ID!):Comment!
 }
 type User{
     id:ID!
@@ -176,8 +177,55 @@ const resolvers = {
 
       return user
       
+    },
+    createPost(parent, args, ctx, info){
+
+      const isAuthorExists = users.some(user=>{
+        user.id === args.author
+      })
+ 
+      if(isAuthorExists){
+        throw new Error('author not found')
+      }
+
+      const post ={
+        id:uuidv4(), 
+        title:args.title, 
+        body:args.body, 
+        published:args.published,
+        author:args.author
+      }
+      posts.push(post)
+      return post
+    },
+    createComment(parent, args, ctx, info){
+
+    const isAuthorExists =users.some(user=>{
+      return user.id===args.author
+    })
+
+    if(!isAuthorExists){
+      throw new Error("author not found")
     }
+    const isPostExist =posts.some(post=>{
+      return post.id===args.post && post.published
+    })
+    if(!isPostExist){
+      throw new Error("Post not found")
+    }
+
+    const comment ={
+      id:uuidv4(),
+      text:args.text, 
+      author:args.author, 
+      post:args.post
+    }
+
+    comments.push(comment);
+    return comment
   },
+  },
+  
 
   Post:{
     // this is called for each object of posts array. 
