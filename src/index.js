@@ -78,9 +78,21 @@ type Query {
    post: Post!
 }
 type Mutation{
-  createUser(name:String!, email:String!):User!
-  createPost(title:String!, body:String!,published:Boolean!, author:ID!):Post!
+  createUser(data:createUserInput):User!
+  createPost(data:createPostInput):Post!
   createComment(text:String!, author:ID!, post:ID!):Comment!
+}
+input createUserInput {
+name:String!
+email:String!
+age:Int
+}
+
+input createPostInput{
+  title:String!
+  body:String!
+  published:Boolean!
+  author:ID!
 }
 type User{
     id:ID!
@@ -158,7 +170,7 @@ const resolvers = {
     createUser(parent, args, ctx, info){
       
       const emailTaken = users.some(user=>{
-        return user.email===args.email
+        return user.email===args.data.email
       })
 
     if(emailTaken){
@@ -167,7 +179,7 @@ const resolvers = {
 
       const user={
       id : uuidv4(),
-      ...args
+      ...args.data
 
       }
 
@@ -179,7 +191,7 @@ const resolvers = {
     createPost(parent, args, ctx, info){
 
       const isAuthorExists = users.some(user=>{
-        user.id === args.author
+        user.id === args.data.author
       })
  
       if(isAuthorExists){
@@ -188,7 +200,7 @@ const resolvers = {
 
       const post ={
         id:uuidv4(), 
-      ...args
+      ...args.data
       }
       posts.push(post)
       return post
