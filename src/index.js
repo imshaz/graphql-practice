@@ -1,7 +1,7 @@
 const { GraphQLServer } = require("graphql-yoga");
 
 import { v4 as uuidv4 } from "uuid";
-const users = [
+let users = [
   {
     id: "123",
     name: "Shaz",
@@ -17,7 +17,7 @@ const users = [
   { id: "125", name: "ali", email: "ali@hotmail.com", age: 30 }
 ];
 
-const posts = [
+let posts = [
   {
     id: "post-1",
     title: "Post One",
@@ -41,7 +41,7 @@ const posts = [
   }
 ];
 
-const comments=[
+let comments=[
   {
     id:"1",
     text:"JS is awesome",
@@ -81,6 +81,10 @@ type Mutation{
   createUser(data:createUserInput):User!
   createPost(data:createPostInput):Post!
   createComment(text:String!, author:ID!, post:ID!):Comment!
+
+  deleteUser(id:ID!):User!
+  deletePost(id:ID!):Post!
+  deleteComment(id:ID!):Comment!
 }
 input createUserInput {
 name:String!
@@ -229,6 +233,57 @@ const resolvers = {
     comments.push(comment);
     return comment
   },
+
+  deleteUser(parent, args, ctx,info){
+      
+      const index = users.findIndex(user=>{
+        return user.id===args.id
+      })
+
+       if(index===-1){
+         throw new Error("User not found")
+       }
+       const deletedUsers= users.splice(index, 1);
+
+       posts = posts.filter((post)=>{
+            const match = post.author ===args.id
+            if(match){
+              comments = comments.filter(comment=>{
+                return comment.id!==post.id
+              })
+            }
+            return !match
+       })
+       comments = comments.filter((comment)=>comment.author!==args.id)
+
+       return deletedUsers[0]
+  },
+  deletePost(parent, args, ctx,info){
+    const index = posts.findIndex(post=>{
+      return post.id===args.id
+    })
+    if(index===-1){
+      throw new Error("Post not found")
+    }
+
+
+    const deletePosts = posts.splice(index, 1);
+
+    comments = comments.filter(comment=>comment.post!==args.id
+    )
+    return deletePosts[0]
+  },
+  deleteComment(parent, args, ctx, info){
+
+    const index = comments.findIndex(comment=>{
+      return comment.id===args.id
+    })
+
+    if(index===-1) throw new Error("Comment not found")
+
+    const deletedComment = comments.splice(index, 1)
+    return deletedComment[0]
+  }
   },
   
 
